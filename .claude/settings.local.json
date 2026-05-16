@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp:*)",
+      "mcp__stitch__list_projects",
+      "Bash(node:*)",
+      "mcp__stitch__list_screens",
+      "WebFetch(domain:contribution.usercontent.google.com)",
+      "Bash(npm install:*)",
+      "Bash(xargs grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx next:*)"
+    ]
+  }
+}
