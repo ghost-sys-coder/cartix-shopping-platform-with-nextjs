@@ -103,6 +103,38 @@ describe("product input helpers", () => {
     });
   });
 
+  it("deduplicates product images by Cloudinary public ID", () => {
+    const result = parseProductPayload({
+      name: "Premium Wireless Headphones",
+      price: "249.99",
+      images: [
+        {
+          url: "https://res.cloudinary.com/demo/image/upload/product.jpg",
+          publicId: "cartix/products/product",
+          altText: "Main image",
+        },
+        {
+          url: "https://res.cloudinary.com/demo/image/upload/product-copy.jpg",
+          publicId: "cartix/products/product",
+          altText: "Duplicate image",
+        },
+      ],
+    });
+
+    assert.equal(result.ok, true);
+    if (result.ok) {
+      assert.deepEqual(result.values.images, [
+        {
+          url: "https://res.cloudinary.com/demo/image/upload/product.jpg",
+          publicId: "cartix/products/product",
+          altText: "Main image",
+          sortOrder: 0,
+          isPrimary: true,
+        },
+      ]);
+    }
+  });
+
   it("maps existing database product values into editable form values", () => {
     const values = mapProductToFormValues({
       product: {

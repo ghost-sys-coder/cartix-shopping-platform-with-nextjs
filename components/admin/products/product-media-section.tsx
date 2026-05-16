@@ -26,7 +26,7 @@ export function ProductMediaSection({
         onError={onError}
       />
       <p className="text-xs text-muted-foreground font-body mt-3">
-        Images are uploaded to Cloudinary and saved with this product.
+        Select one or more images. Removed images are deleted from Cloudinary.
       </p>
     </section>
   );

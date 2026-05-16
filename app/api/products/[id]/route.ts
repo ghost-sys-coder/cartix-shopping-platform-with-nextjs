@@ -3,6 +3,8 @@ import { and, eq, ne } from "drizzle-orm";
 import { db } from "@/db/drizzle";
 import { productImages, products } from "@/db/schema";
 import { requireAdminResponse } from "@/lib/auth/admin";
+import { deleteImage } from "@/lib/cloudinary";
+import { getRemovedCloudinaryPublicIds } from "@/lib/products/product-images";
 import { parseProductPayload } from "@/lib/products/product-input";
 
 export async function PATCH(
@@ -51,6 +53,11 @@ export async function PATCH(
       }
     }
 
+    const existingImages = await db
+      .select({ publicId: productImages.publicId })
+      .from(productImages)
+      .where(eq(productImages.productId, productId));
+
     const [product] = await db
       .update(products)
       .set({
@@ -78,6 +85,20 @@ export async function PATCH(
         }))
       );
     }
+
+    const removedPublicIds = getRemovedCloudinaryPublicIds(
+      existingImages,
+      parsed.values.images
+    );
+    await Promise.all(
+      removedPublicIds.map(async (publicId) => {
+        try {
+          await deleteImage(publicId);
+        } catch (deleteError) {
+          console.error("Failed to delete removed product image:", deleteError);
+        }
+      })
+    );
 
     return NextResponse.json({ product });
   } catch (error) {

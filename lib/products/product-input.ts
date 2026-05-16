@@ -1,3 +1,5 @@
+import { mergeUniqueProductImages } from "@/lib/products/product-images";
+
 export type ProductStatus = "draft" | "active" | "archived";
 
 export interface ProductImageInput {
@@ -117,7 +119,7 @@ function statusValue(value: unknown): ProductStatus {
 function imageValues(value: unknown): ProductImageValues[] {
   if (!Array.isArray(value)) return [];
 
-  return value
+  const images = value
     .map((image, index) => {
       if (typeof image !== "object" || image === null) return null;
       const record = image as Record<string, unknown>;
@@ -134,6 +136,12 @@ function imageValues(value: unknown): ProductImageValues[] {
       };
     })
     .filter((image): image is ProductImageValues => image !== null);
+
+  return mergeUniqueProductImages([], images).map((image, index) => ({
+    ...image,
+    sortOrder: index,
+    isPrimary: index === 0,
+  }));
 }
 
 export function slugifyProductName(value: string) {
