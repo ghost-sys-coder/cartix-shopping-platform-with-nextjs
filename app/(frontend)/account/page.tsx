@@ -8,7 +8,7 @@ import { Package, Heart, MapPin, CreditCard, Settings, ChevronRight, ShoppingBag
 
 const MENU_ITEMS = [
   { icon: Package, label: "My Orders", href: "/account/orders", badge: "3" },
-  { icon: Heart, label: "Wishlist", href: "/account/wishlist", badge: "12" },
+  { icon: Heart, label: "Wishlist", href: "/account/wishlist" },
   { icon: MapPin, label: "Addresses", href: "/account/addresses" },
   { icon: CreditCard, label: "Payment Methods", href: "/account/payment" },
   { icon: Star, label: "Reviews", href: "/account/reviews" },

@@ -3,9 +3,10 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { ShoppingCart, Star } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { toast } from "sonner";
+import { WishlistButton } from "@/components/frontend/wishlist-button";
 
 interface ProductCardProps {
   id: number;
@@ -78,9 +79,13 @@ export function ProductCard({
           {/* Actions overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
           <div className="absolute top-3 right-3 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-300">
-            <button className="w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center text-foreground hover:text-red-500 shadow-md transition-colors">
-              <Heart size={14} />
-            </button>
+            <WishlistButton
+              productId={id}
+              productName={name}
+              iconSize={14}
+              stopPropagation
+              className="w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center text-foreground hover:text-red-500 shadow-md transition-colors disabled:opacity-60"
+            />
           </div>
         </div>
 

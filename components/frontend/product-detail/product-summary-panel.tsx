@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Heart,
   Minus,
   Plus,
   RefreshCw,
@@ -19,6 +18,7 @@ import type {
 } from "@/lib/products/product-detail-shared";
 import { useCartStore } from "@/store/cart";
 import { toast } from "sonner";
+import { WishlistButton } from "@/components/frontend/wishlist-button";
 
 const trustItems = [
   { icon: Truck, label: "Free Shipping", sub: "Orders over $99" },
@@ -223,13 +223,11 @@ export function ProductSummaryPanel({ product }: ProductSummaryPanelProps) {
           <ShoppingCart size={18} />
           {canAddToCart ? "Add to Cart" : "Out of Stock"}
         </motion.button>
-        <button
-          type="button"
-          className="flex h-12 w-12 items-center justify-center rounded-[var(--radius)] border border-border text-muted-foreground hover:bg-muted transition-colors"
-          aria-label="Save to wishlist"
-        >
-          <Heart size={18} />
-        </button>
+        <WishlistButton
+          productId={product.id}
+          productName={product.name}
+          className="flex h-12 w-12 items-center justify-center rounded-[var(--radius)] border border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-60"
+        />
         <button
           type="button"
           className="flex h-12 w-12 items-center justify-center rounded-[var(--radius)] border border-border text-muted-foreground hover:bg-muted transition-colors"
