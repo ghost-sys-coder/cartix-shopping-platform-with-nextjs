@@ -51,10 +51,63 @@ interface HomeCategoryRow {
   imageUrl: string | null;
 }
 
+type HomeProductQueryRow = Omit<HomeProductRow, "reviewCount" | "rating">;
+
+interface HomeReviewRow {
+  productId: number;
+  reviewCount: number;
+  rating: string | number | null;
+}
+
+interface HomeCategoryCountRow {
+  categoryId: number | null;
+  count: number;
+}
+
+interface LoadHomePageQueryRowsOptions<T> {
+  label: string;
+  load: () => Promise<T[]>;
+  fallback: T[];
+  retries?: number;
+  retryDelayMs?: number;
+  onError?: (label: string, error: unknown) => void;
+}
+
 function numericValue(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function loadHomePageQueryRows<T>({
+  label,
+  load,
+  fallback,
+  retries = 1,
+  retryDelayMs = 150,
+  onError = (queryLabel, error) => {
+    console.error(`Home page query failed: ${queryLabel}`, error);
+  },
+}: LoadHomePageQueryRowsOptions<T>): Promise<T[]> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await load();
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries && retryDelayMs > 0) {
+        await wait(retryDelayMs);
+      }
+    }
+  }
+
+  onError(label, lastError);
+  return fallback;
 }
 
 export function mapHomeProductRows(rows: HomeProductRow[]): HomeProduct[] {
@@ -92,55 +145,75 @@ export function mapHomeCategoryRows(
 export async function getHomePageData(): Promise<HomePageData> {
   const [productRows, reviewRows, categoryRows, categoryCountRows] =
     await Promise.all([
-      db
-        .select({
-          id: products.id,
-          name: products.name,
-          slug: products.slug,
-          price: products.price,
-          compareAtPrice: products.compareAtPrice,
-          imageUrl: productImages.url,
-          isFeatured: products.isFeatured,
-        })
-        .from(products)
-        .leftJoin(
-          productImages,
-          and(
-            eq(productImages.productId, products.id),
-            eq(productImages.isPrimary, true)
-          )
-        )
-        .where(eq(products.status, "active"))
-        .orderBy(desc(products.isFeatured), desc(products.createdAt))
-        .limit(4),
-      db
-        .select({
-          productId: reviews.productId,
-          reviewCount: sql<number>`COUNT(*)::int`,
-          rating: sql<string>`ROUND(AVG(${reviews.rating})::numeric, 2)::text`,
-        })
-        .from(reviews)
-        .where(eq(reviews.isApproved, true))
-        .groupBy(reviews.productId),
-      db
-        .select({
-          id: categories.id,
-          name: categories.name,
-          slug: categories.slug,
-          imageUrl: categories.imageUrl,
-        })
-        .from(categories)
-        .where(eq(categories.isActive, true))
-        .orderBy(asc(categories.sortOrder), asc(categories.name))
-        .limit(4),
-      db
-        .select({
-          categoryId: products.categoryId,
-          count: sql<number>`COUNT(*)::int`,
-        })
-        .from(products)
-        .where(eq(products.status, "active"))
-        .groupBy(products.categoryId),
+      loadHomePageQueryRows<HomeProductQueryRow>({
+        label: "featured products",
+        fallback: [],
+        load: () =>
+          db
+            .select({
+              id: products.id,
+              name: products.name,
+              slug: products.slug,
+              price: products.price,
+              compareAtPrice: products.compareAtPrice,
+              imageUrl: productImages.url,
+              isFeatured: products.isFeatured,
+            })
+            .from(products)
+            .leftJoin(
+              productImages,
+              and(
+                eq(productImages.productId, products.id),
+                eq(productImages.isPrimary, true)
+              )
+            )
+            .where(eq(products.status, "active"))
+            .orderBy(desc(products.isFeatured), desc(products.createdAt))
+            .limit(4),
+      }),
+      loadHomePageQueryRows<HomeReviewRow>({
+        label: "product review summaries",
+        fallback: [],
+        load: () =>
+          db
+            .select({
+              productId: reviews.productId,
+              reviewCount: sql<number>`COUNT(*)::int`,
+              rating: sql<string>`ROUND(AVG(${reviews.rating})::numeric, 2)::text`,
+            })
+            .from(reviews)
+            .where(eq(reviews.isApproved, true))
+            .groupBy(reviews.productId),
+      }),
+      loadHomePageQueryRows<HomeCategoryRow>({
+        label: "featured categories",
+        fallback: [],
+        load: () =>
+          db
+            .select({
+              id: categories.id,
+              name: categories.name,
+              slug: categories.slug,
+              imageUrl: categories.imageUrl,
+            })
+            .from(categories)
+            .where(eq(categories.isActive, true))
+            .orderBy(asc(categories.sortOrder), asc(categories.name))
+            .limit(4),
+      }),
+      loadHomePageQueryRows<HomeCategoryCountRow>({
+        label: "category product counts",
+        fallback: [],
+        load: () =>
+          db
+            .select({
+              categoryId: products.categoryId,
+              count: sql<number>`COUNT(*)::int`,
+            })
+            .from(products)
+            .where(eq(products.status, "active"))
+            .groupBy(products.categoryId),
+      }),
     ]);
 
   const reviewsByProduct = new Map(

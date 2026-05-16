@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  loadHomePageQueryRows,
   mapHomeCategoryRows,
   mapHomeProductRows,
 } from "@/lib/home/home-data";
@@ -60,5 +61,40 @@ describe("home data mappers", () => {
         productCount: 4,
       },
     ]);
+  });
+
+  it("retries a failed home page query before returning rows", async () => {
+    let attempts = 0;
+
+    const rows = await loadHomePageQueryRows({
+      label: "featured products",
+      fallback: [],
+      retryDelayMs: 0,
+      load: async () => {
+        attempts += 1;
+        if (attempts === 1) throw new Error("temporary database failure");
+        return [{ id: 1 }];
+      },
+    });
+
+    assert.equal(attempts, 2);
+    assert.deepEqual(rows, [{ id: 1 }]);
+  });
+
+  it("returns fallback rows when a home page query keeps failing", async () => {
+    const errors: unknown[] = [];
+
+    const rows = await loadHomePageQueryRows({
+      label: "featured products",
+      fallback: [{ id: 99 }],
+      retryDelayMs: 0,
+      onError: (_label, error) => errors.push(error),
+      load: async () => {
+        throw new Error("database unavailable");
+      },
+    });
+
+    assert.deepEqual(rows, [{ id: 99 }]);
+    assert.equal(errors.length, 1);
   });
 });
