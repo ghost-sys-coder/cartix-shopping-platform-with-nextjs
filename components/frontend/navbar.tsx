@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser, UserButton } from "@clerk/nextjs";
-import { ShoppingCart, Search, Menu, X, Heart } from "lucide-react";
+import { ShoppingCart, Menu, X, Heart } from "lucide-react";
 import { useCartStore } from "@/store/cart";
+import { NavbarSearch } from "@/components/frontend/search/navbar-search";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -80,9 +81,7 @@ export function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-1">
-            <button className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
-              <Search size={18} />
-            </button>
+            <NavbarSearch />
 
             {isSignedIn && (
               <Link
