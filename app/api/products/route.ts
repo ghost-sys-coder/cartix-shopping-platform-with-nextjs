@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db/drizzle";
-import { products, categories } from "@/db/schema";
+import { products, categories, productImages } from "@/db/schema";
 import { eq, desc, ilike, and, or } from "drizzle-orm";
 import { requireAdminResponse } from "@/lib/auth/admin";
+import { parseProductPayload } from "@/lib/products/product-input";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -54,24 +55,54 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+    const parsed = parseProductPayload(body);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+
+    const [existingSlug] = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(eq(products.slug, parsed.values.product.slug))
+      .limit(1);
+    if (existingSlug) {
+      return NextResponse.json(
+        { error: "A product with this slug already exists" },
+        { status: 409 }
+      );
+    }
+
+    if (parsed.values.product.sku) {
+      const [existingSku] = await db
+        .select({ id: products.id })
+        .from(products)
+        .where(eq(products.sku, parsed.values.product.sku))
+        .limit(1);
+      if (existingSku) {
+        return NextResponse.json(
+          { error: "A product with this SKU already exists" },
+          { status: 409 }
+        );
+      }
+    }
+
     const [product] = await db
       .insert(products)
-      .values({
-        name: body.name,
-        slug: body.slug,
-        description: body.description,
-        shortDescription: body.shortDescription,
-        price: body.price,
-        compareAtPrice: body.compareAtPrice,
-        costPrice: body.costPrice,
-        sku: body.sku,
-        stock: body.stock ?? 0,
-        categoryId: body.categoryId,
-        status: body.status ?? "draft",
-        isFeatured: body.isFeatured ?? false,
-        tags: body.tags,
-      })
+      .values(parsed.values.product)
       .returning();
+
+    if (parsed.values.images.length > 0) {
+      await db.insert(productImages).values(
+        parsed.values.images.map((image) => ({
+          productId: product.id,
+          url: image.url,
+          publicId: image.publicId,
+          altText: image.altText,
+          sortOrder: image.sortOrder,
+          isPrimary: image.isPrimary,
+        }))
+      );
+    }
 
     return NextResponse.json({ product }, { status: 201 });
   } catch (error) {

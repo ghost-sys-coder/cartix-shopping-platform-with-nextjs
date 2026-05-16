@@ -12,6 +12,7 @@
           "scrollbar-color"
         ]
       }
-    ]
+    ],
+    "no-inline-styles": "off"
   }
 }
