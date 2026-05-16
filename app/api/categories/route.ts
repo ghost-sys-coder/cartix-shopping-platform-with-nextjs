@@ -3,6 +3,7 @@ import { db } from "@/db/drizzle";
 import { categories } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAdminResponse } from "@/lib/auth/admin";
+import { parseCategoryPayload } from "@/lib/categories/category-input";
 
 export async function GET() {
   try {
@@ -25,17 +26,26 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+    const parsed = parseCategoryPayload(body);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+
+    const [existingCategory] = await db
+      .select({ id: categories.id })
+      .from(categories)
+      .where(eq(categories.slug, parsed.values.slug))
+      .limit(1);
+    if (existingCategory) {
+      return NextResponse.json(
+        { error: "A category with this slug already exists" },
+        { status: 409 }
+      );
+    }
+
     const [category] = await db
       .insert(categories)
-      .values({
-        name: body.name,
-        slug: body.slug,
-        description: body.description,
-        imageUrl: body.imageUrl,
-        parentId: body.parentId ?? null,
-        isActive: body.isActive ?? true,
-        sortOrder: body.sortOrder ?? 0,
-      })
+      .values(parsed.values)
       .returning();
 
     return NextResponse.json({ category }, { status: 201 });

@@ -9,9 +9,38 @@ cloudinary.config({
 
 export { cloudinary };
 
+export function normalizeCloudinaryFolderSegment(value: string) {
+  return value
+    .trim()
+    .replace(/\\/g, "/")
+    .split("/")
+    .map((segment) =>
+      segment
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+    )
+    .filter(Boolean)
+    .join("/");
+}
+
+export function getCloudinaryFolder(subfolder = "products") {
+  const baseFolder =
+    normalizeCloudinaryFolderSegment(
+      process.env.CLOUDINARY_FOLDER_NAME ?? "cartix"
+    ) || "cartix";
+  const childFolder = normalizeCloudinaryFolderSegment(subfolder);
+
+  if (!childFolder || childFolder === baseFolder) return baseFolder;
+  if (childFolder.startsWith(`${baseFolder}/`)) return childFolder;
+
+  return `${baseFolder}/${childFolder}`;
+}
+
 export async function uploadImage(
   file: string,
-  folder = "cartix/products"
+  folder = getCloudinaryFolder("products")
 ): Promise<{ url: string; publicId: string }> {
   const result = await cloudinary.uploader.upload(file, {
     folder,

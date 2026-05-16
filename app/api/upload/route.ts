@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { uploadImage, deleteImage } from "@/lib/cloudinary";
+import { uploadImage, deleteImage, getCloudinaryFolder } from "@/lib/cloudinary";
 import { requireAdminResponse } from "@/lib/auth/admin";
 
 export async function POST(request: NextRequest) {
@@ -8,13 +8,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { data, folder = "cartix/products" } = body;
+    const { data, folder = "products" } = body;
 
     if (!data) {
       return NextResponse.json({ error: "No image data provided" }, { status: 400 });
     }
 
-    const result = await uploadImage(data, folder);
+    const result = await uploadImage(data, getCloudinaryFolder(folder));
     return NextResponse.json(result);
   } catch (error) {
     console.error("POST /api/upload error:", error);
