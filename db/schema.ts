@@ -92,6 +92,7 @@ export const products = pgTable(
     status: productStatusEnum("status").default("draft").notNull(),
     isFeatured: boolean("is_featured").default(false).notNull(),
     tags: text("tags").array(),
+    keyFeatures: text("key_features").array(),
     metaTitle: varchar("meta_title", { length: 255 }),
     metaDescription: text("meta_description"),
     createdAt: timestamp("created_at").defaultNow().notNull(),

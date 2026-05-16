@@ -1,0 +1,33 @@
+{
+  "name": "Premium Wireless Headphones",
+  "slug": "premium-wireless-headphones",
+  "description": "Over-ear wireless headphones with adaptive noise cancellation, soft memory-foam cushions, and fast USB-C charging.",
+  "shortDescription": "Adaptive noise-cancelling headphones built for long listening sessions.",
+  "price": 249.99,
+  "compareAtPrice": 299.99,
+  "costPrice": 89,
+  "sku": "HP-WL-001",
+  "barcode": "012345678905",
+  "stock": 42,
+  "lowStockThreshold": 5,
+  "weight": 1.2,
+  "categoryId": null,
+  "status": "draft",
+  "isFeatured": true,
+  "tags": ["headphones", "wireless", "audio"],
+  "keyFeatures": [
+    "Active noise cancellation",
+    "40-hour battery life",
+    "USB-C fast charging",
+    "Memory-foam ear cushions"
+  ],
+  "metaTitle": "Premium Wireless Headphones",
+  "metaDescription": "Shop premium wireless headphones with adaptive noise cancellation and 40-hour battery life.",
+  "images": [
+    {
+      "url": "https://res.cloudinary.com/demo/image/upload/product-headphones.jpg",
+      "publicId": "cartix/products/product-headphones",
+      "altText": "Premium wireless headphones"
+    }
+  ]
+}

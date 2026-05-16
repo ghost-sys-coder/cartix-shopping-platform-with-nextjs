@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, ImageIcon, TrendingUp } from "lucide-react";
+import { Edit2, Eye, ImageIcon, TrendingUp } from "lucide-react";
 import type { AdminProductListItem } from "@/components/admin/products/product-list-types";
 
 interface ProductTableRowProps {
@@ -83,6 +83,13 @@ export function ProductTableRow({ product }: ProductTableRowProps) {
             aria-label={`View ${product.name}`}
           >
             <Eye size={13} />
+          </Link>
+          <Link
+            href={`/admin/products/${product.id}`}
+            className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            aria-label={`Edit ${product.name}`}
+          >
+            <Edit2 size={13} />
           </Link>
         </div>
       </td>

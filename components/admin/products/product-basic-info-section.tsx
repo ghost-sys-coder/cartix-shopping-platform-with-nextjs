@@ -50,6 +50,18 @@ export function ProductBasicInfoSection({
         onChange={(value) => onChange("tags", value)}
         placeholder="headphones, wireless, audio"
       />
+      <div>
+        <label className="block text-xs font-label font-semibold text-muted-foreground mb-1.5">
+          Key Features (one per line)
+        </label>
+        <textarea
+          value={form.keyFeatures}
+          onChange={(event) => onChange("keyFeatures", event.target.value)}
+          rows={4}
+          placeholder="Active noise cancellation&#10;40-hour battery life"
+          className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 font-body resize-none"
+        />
+      </div>
     </section>
   );
 }

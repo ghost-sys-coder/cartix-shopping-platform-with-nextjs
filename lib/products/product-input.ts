@@ -23,6 +23,7 @@ export interface ProductValues {
   status: ProductStatus;
   isFeatured: boolean;
   tags: string[] | null;
+  keyFeatures: string[] | null;
   metaTitle: string | null;
   metaDescription: string | null;
 }
@@ -33,6 +34,16 @@ export interface ProductImageValues {
   altText: string | null;
   sortOrder: number;
   isPrimary: boolean;
+}
+
+export interface EditableProductRecord {
+  product: ProductValues & { id: number };
+  images: Array<{
+    id: number;
+    url: string;
+    publicId: string;
+    altText: string | null;
+  }>;
 }
 
 type ProductPayload = Record<string, unknown>;
@@ -81,6 +92,21 @@ function tagsValue(value: unknown) {
   const normalized = tags
     .filter((tag): tag is string => typeof tag === "string" && tag.length > 0)
     .map((tag) => tag.toLowerCase());
+  return normalized.length > 0 ? normalized : null;
+}
+
+function keyFeaturesValue(value: unknown) {
+  const features = Array.isArray(value)
+    ? value
+    : stringValue(value)
+        .split(/\r?\n/)
+        .map((feature) => feature.trim());
+  const normalized = features
+    .filter(
+      (feature): feature is string =>
+        typeof feature === "string" && feature.trim().length > 0
+    )
+    .map((feature) => feature.trim());
   return normalized.length > 0 ? normalized : null;
 }
 
@@ -154,10 +180,79 @@ export function parseProductPayload(payload: ProductPayload): ParseResult {
         isFeatured:
           typeof payload.isFeatured === "boolean" ? payload.isFeatured : false,
         tags: tagsValue(payload.tags),
+        keyFeatures: keyFeaturesValue(payload.keyFeatures),
         metaTitle: nullableStringValue(payload.metaTitle),
         metaDescription: nullableStringValue(payload.metaDescription),
       },
       images: imageValues(payload.images),
+    },
+  };
+}
+
+export function mapProductToFormValues(record: EditableProductRecord) {
+  return {
+    form: {
+      name: record.product.name,
+      slug: record.product.slug,
+      description: record.product.description ?? "",
+      shortDescription: record.product.shortDescription ?? "",
+      price: record.product.price,
+      compareAtPrice: record.product.compareAtPrice ?? "",
+      costPrice: record.product.costPrice ?? "",
+      sku: record.product.sku ?? "",
+      barcode: record.product.barcode ?? "",
+      stock: record.product.stock.toString(),
+      lowStockThreshold: record.product.lowStockThreshold.toString(),
+      weight: record.product.weight ?? "",
+      categoryId: record.product.categoryId?.toString() ?? "",
+      status: record.product.status,
+      isFeatured: record.product.isFeatured,
+      tags: record.product.tags?.join(", ") ?? "",
+      keyFeatures: record.product.keyFeatures?.join("\n") ?? "",
+      metaTitle: record.product.metaTitle ?? "",
+      metaDescription: record.product.metaDescription ?? "",
+    },
+    images: record.images.map((image) => ({
+      url: image.url,
+      publicId: image.publicId,
+      altText: image.altText ?? "",
+    })),
+  };
+}
+
+export function mapProductPayloadToFormValues(payload: ProductPayload) {
+  const parsed = parseProductPayload(payload);
+  if (!parsed.ok) return parsed;
+
+  return {
+    ok: true as const,
+    values: {
+      form: {
+        name: parsed.values.product.name,
+        slug: parsed.values.product.slug,
+        description: parsed.values.product.description ?? "",
+        shortDescription: parsed.values.product.shortDescription ?? "",
+        price: parsed.values.product.price,
+        compareAtPrice: parsed.values.product.compareAtPrice ?? "",
+        costPrice: parsed.values.product.costPrice ?? "",
+        sku: parsed.values.product.sku ?? "",
+        barcode: parsed.values.product.barcode ?? "",
+        stock: parsed.values.product.stock.toString(),
+        lowStockThreshold: parsed.values.product.lowStockThreshold.toString(),
+        weight: parsed.values.product.weight ?? "",
+        categoryId: parsed.values.product.categoryId?.toString() ?? "",
+        status: parsed.values.product.status,
+        isFeatured: parsed.values.product.isFeatured,
+        tags: parsed.values.product.tags?.join(", ") ?? "",
+        keyFeatures: parsed.values.product.keyFeatures?.join("\n") ?? "",
+        metaTitle: parsed.values.product.metaTitle ?? "",
+        metaDescription: parsed.values.product.metaDescription ?? "",
+      },
+      images: parsed.values.images.map((image) => ({
+        url: image.url,
+        publicId: image.publicId,
+        altText: image.altText ?? "",
+      })),
     },
   };
 }

@@ -29,6 +29,7 @@ export interface ProductFormState {
   status: ProductStatus;
   isFeatured: boolean;
   tags: string;
+  keyFeatures: string;
   metaTitle: string;
   metaDescription: string;
 }
@@ -50,6 +51,7 @@ export const EMPTY_PRODUCT_FORM: ProductFormState = {
   status: "draft",
   isFeatured: false,
   tags: "",
+  keyFeatures: "",
   metaTitle: "",
   metaDescription: "",
 };
